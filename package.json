@@ -1,0 +1,33 @@
+{
+  "name": "BabyHint",
+  "version": "0.0.1",
+  "description": "Provide more helpful hints for JavaScript developers.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha --compilers js:babel/register test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Khan/BabyHint.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Khan/BabyHint/issues"
+  },
+  "homepage": "https://github.com/Khan/BabyHint",
+  "devDependencies": {
+    "babel": "^5.8.5",
+    "expect.js": "^0.3.1",
+    "mocha": "^2.2.5"
+  },
+  "dependencies": {
+    "jed": "^1.1.0",
+    "jquery": "^2.1.4",
+    "jshint": "2.4.0",
+    "lodash": "^3.10.0"
+  }
+}
