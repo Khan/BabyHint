@@ -1,3 +1,6 @@
+var Jed = require('jed');
+var jQuery = require('jquery');
+
 (function() {
     // If no language is specified, or if an unknown language is specified,
     // then fall back to using "en" as the base language
@@ -135,12 +138,12 @@
      * other things added to props, such as this.props.ref and
      * this.props.children
      */
-    window.$_ = function(options, str) {
-        if (arguments.length !== 2 || !_.isString(str)) {
-            return "<$_> must have exactly one child, which must be a string";
-        }
-        return interpolateStringToArray(str, options);
-    };
+    //var $_ = function(options, str) {
+    //    if (arguments.length !== 2 || !_.isString(str)) {
+    //        return "<$_> must have exactly one child, which must be a string";
+    //    }
+    //    return interpolateStringToArray(str, options);
+    //};
 
     /**
      * Simple ngettext method with sprintf-like %(name)s replacement
@@ -301,15 +304,15 @@
             options.inverse(this);
     };
 
-    window.i18n = i18n;
+    //window.i18n = i18n;
 })();
 
-if (typeof Handlebars !== "undefined") {
-    Handlebars.registerHelper("_", i18n.handlebars_underscore);
-
-    Handlebars.registerHelper("i18nDoNotTranslate",
-        i18n.handlebars_do_not_translate);
-
-    Handlebars.registerHelper("ngettext",
-        i18n.handlebars_ngettext);
-}
+//if (typeof Handlebars !== "undefined") {
+//    Handlebars.registerHelper("_", i18n.handlebars_underscore);
+//
+//    Handlebars.registerHelper("i18nDoNotTranslate",
+//        i18n.handlebars_do_not_translate);
+//
+//    Handlebars.registerHelper("ngettext",
+//        i18n.handlebars_ngettext);
+//}
