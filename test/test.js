@@ -21,7 +21,6 @@ function assertTest(options) {
         let errors = BabyHint.babyErrors(code, jshintErrors);
 
         if (!options.reason) {
-            console.log(errors);
             expect(errors.length).to.be.equal(0);
         } else {
             expect(errors).to.not.equal([]);
