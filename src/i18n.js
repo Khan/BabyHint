@@ -1,5 +1,6 @@
-var Jed = require('jed');
-var jQuery = require('jquery');
+var Jed = require("jed");
+var jQuery = require("jquery");
+var _ = require("lodash");
 
 (function() {
     // If no language is specified, or if an unknown language is specified,

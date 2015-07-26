@@ -2,21 +2,30 @@ var BabyHint = require("../src/babyhint.js");
 var JSHINT = require("jshint").JSHINT;
 let expect = require("expect.js");
 
+var context = {
+    rect() {},
+    noStroke() {},
+    random() {}
+};
+
+BabyHint.init({ context });
+
 function assertTest(options) {
     it(options.title, function () {
-        JSHINT(options.code, { undef: true });
+        let code = "/*global random */\n" + options.code;
+        JSHINT(code, { undef: true, curly: true, latedef: true });
         let jshintErrors = JSHINT.errors;
-        let errors = BabyHint.babyErrors(options.code, jshintErrors);
+        let errors = BabyHint.babyErrors(code, jshintErrors);
         
         if (options.reason) {
-            expect(errors[0].lint.reason).to.equal(options.reason);
+            expect(errors[0].text.replace(/"/g, "")).to.equal(options.reason);
         } else {
             expect(errors.length).to.equal(0);
         }
     }); 
 }
 
-describe.only("Scratchpad Output - BabyHint checks", function() {
+describe("Scratchpad Output - BabyHint checks", function() {
     /* Baby Hint errors */
     assertTest({
         title: "Misspelling a function name",
@@ -24,84 +33,84 @@ describe.only("Scratchpad Output - BabyHint checks", function() {
         babyhint: true,
         code: "reect(20, 20, 10, 20);"
     });
-
+    
     assertTest({
         title: "Using wrong capitalization",
         reason: "noSTROKE is not defined. Maybe you meant to type noStroke, or you\'re using a variable you didn\'t define.",
         babyhint: true,
         code: "noSTROKE();"
     });
-
+    
     assertTest({
         title: "Using wrong capitalization and misspelling",
         reason: "noStrokee is not defined. Maybe you meant to type noStroke, or you\'re using a variable you didn\'t define.",
         babyhint: true,
         code: "noStrokee();"
     });
-
+    
     assertTest({
         title: "Mispelling with too many letters",
         reason: "reeeect is not defined. Make sure you're spelling it correctly and that you declared it.",
         babyhint: true,
         code: "reeeect();"
     });
-
+    
     assertTest({
         title: "Leaving off last parantheses in function call",
         reason: "It looks like you are missing a ) - does every ( have a corresponding closing )?",
         babyhint: true,
         code: "rect(80,70,60,240);\nrect("
     });
-
+    
     assertTest({
         title: "Leaving off last parantheses in if statement",
         reason: "It looks like you are missing a ) - does every ( have a corresponding closing )?",
         babyhint: true,
         code: "if(\n"
     });
-
+    
     assertTest({
         title: "Syntax error on line that has a keyword that looks like another keyword",
         reason: "I thought you were going to type { but you typed y.",
         babyhint: true,
         code: "var y;\nif(true)\ny=random(0,10);"
     });
-
+    
     assertTest({
         title: "Spelling shouldn't check argument names for misspelling",
         reason: "'drawRainbow' was used before it was defined.",
         babyhint: true,
         code: "var Rainbow = function(){};var RainbowRed = new Rainbow();drawRainbow(RainbowRed);var drawRainbow = function(rainbow) {};"
     });
-
+    
     assertTest({
         title: "Spelling error that should match lowercase version instead of uppercase",
         reason: "rainbo is not defined. Maybe you meant to type rainbow, or you\'re using a variable you didn\'t define.",
         babyhint: true,
         code: "var Rainbow = function(){};\nvar RainbowRed = new Rainbow();\nvar drawRainbow = function(rainbow){\nellipse(rainbo.x, 10, 10, 10);};"
     });
-
+    
     assertTest({
         title: "Spelling error shouldn't warn about same word",
         reason: "I thought you were going to type an identifier but you typed '?'.",
         babyhint: true,
         code: "var numFlipped = 0; if (numFlipped === 2 && ?) {}"
     });
-
+    
     // Don't check for errors inside strings (when they include comment syntax)
     assertTest({
         title: "No errors should trigger inside of strings",
         babyhint: true,
         code: "var foo = \"rect()//\";"
     });
-
+    
     assertTest({
         title: "It should only trigger a single error for undefined var in for loop definition",
         reason: "x is not defined. Make sure you're spelling it correctly and that you declared it.",
         babyhint: true,
         code: "for (var i = 0; i < 10; x++) { }"
     });
-
+    
     assertTest({
         title: "Missing comma should only report a single error",
         reason: "Did you forget to add a comma between two parameters?",

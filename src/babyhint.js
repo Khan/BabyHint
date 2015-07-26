@@ -1,5 +1,6 @@
 let _ = require("lodash");
 let $ = require("jquery");
+let codes = require("./codes");
 require("./i18n.js");
 
 /*
@@ -193,7 +194,20 @@ var BabyHint = {
         _.each(hintErrors, function(error) {
             // Get correct index number from the reported line number
             if (error) {
-                errorLines[error.line - 2] = true;
+                errorLines[error.line - 1] = true;
+                error.reason = codes[error.code];
+                if (error.a) {
+                    error.reason = error.reason.replace("{a}", error.a);
+                }
+                if (error.b) {
+                    error.reason = error.reason.replace("{b}", error.b);
+                }
+                if (error.c) {
+                    error.reason = error.reason.replace("{c}", error.c);
+                }
+                if (error.d) {
+                    error.reason = error.reason.replace("{d}", error.d);
+                }
             }
         });
 
@@ -216,7 +230,7 @@ var BabyHint = {
             if (error && error.line && error.character &&
                 error.reason &&
                 !/unable to continue/i.test(error.reason)) {
-                var realErrorLine = error.line - 2;
+                var realErrorLine = error.line - 1;
                 brokenLines.push(realErrorLine);
                 // Errors that override BabyLint errors in the remainder of the
                 // line. Includes: unclosed string (W112)
