@@ -12,13 +12,13 @@ BabyHint.init({ context });
 
 function assertTest(options) {
     it(options.title, function () {
-        let code = "/*global random */\n" + options.code;
+        let code = "/*global random, rect */\n" + options.code;
         JSHINT(code, { undef: true, curly: true, latedef: true });
         let jshintErrors = JSHINT.errors;
         let errors = BabyHint.babyErrors(code, jshintErrors);
         
         if (options.reason) {
-            expect(errors[0].text.replace(/"/g, "")).to.equal(options.reason);
+            expect(errors[0].text).to.equal(options.reason);
         } else {
             expect(errors.length).to.equal(0);
         }
@@ -29,49 +29,49 @@ describe("Scratchpad Output - BabyHint checks", function() {
     /* Baby Hint errors */
     assertTest({
         title: "Misspelling a function name",
-        reason: "reect is not defined. Maybe you meant to type rect, or you\'re using a variable you didn\'t define.",
+        reason: `"reect" is not defined. Maybe you meant to type "rect", or you're using a variable you didn't define.`,
         babyhint: true,
         code: "reect(20, 20, 10, 20);"
     });
     
     assertTest({
         title: "Using wrong capitalization",
-        reason: "noSTROKE is not defined. Maybe you meant to type noStroke, or you\'re using a variable you didn\'t define.",
+        reason: `"noSTROKE" is not defined. Maybe you meant to type "noStroke", or you're using a variable you didn't define.`,
         babyhint: true,
         code: "noSTROKE();"
     });
     
     assertTest({
         title: "Using wrong capitalization and misspelling",
-        reason: "noStrokee is not defined. Maybe you meant to type noStroke, or you\'re using a variable you didn\'t define.",
+        reason: `"noStrokee" is not defined. Maybe you meant to type "noStroke", or you're using a variable you didn't define.`,
         babyhint: true,
         code: "noStrokee();"
     });
     
     assertTest({
         title: "Mispelling with too many letters",
-        reason: "reeeect is not defined. Make sure you're spelling it correctly and that you declared it.",
+        reason: `"reeeect" is not defined. Make sure you're spelling it correctly and that you declared it.`,
         babyhint: true,
         code: "reeeect();"
     });
     
     assertTest({
         title: "Leaving off last parantheses in function call",
-        reason: "It looks like you are missing a ) - does every ( have a corresponding closing )?",
+        reason: `It looks like you are missing a ")" - does every "(" have a corresponding closing ")"?`,
         babyhint: true,
         code: "rect(80,70,60,240);\nrect("
     });
     
     assertTest({
         title: "Leaving off last parantheses in if statement",
-        reason: "It looks like you are missing a ) - does every ( have a corresponding closing )?",
+        reason: `It looks like you are missing a ")" - does every "(" have a corresponding closing ")"?`,
         babyhint: true,
         code: "if(\n"
     });
     
     assertTest({
         title: "Syntax error on line that has a keyword that looks like another keyword",
-        reason: "I thought you were going to type { but you typed y.",
+        reason: `I thought you were going to type "{" but you typed "y".`,
         babyhint: true,
         code: "var y;\nif(true)\ny=random(0,10);"
     });
@@ -85,7 +85,7 @@ describe("Scratchpad Output - BabyHint checks", function() {
     
     assertTest({
         title: "Spelling error that should match lowercase version instead of uppercase",
-        reason: "rainbo is not defined. Maybe you meant to type rainbow, or you\'re using a variable you didn\'t define.",
+        reason: `"rainbo" is not defined. Maybe you meant to type "rainbow", or you're using a variable you didn't define.`,
         babyhint: true,
         code: "var Rainbow = function(){};\nvar RainbowRed = new Rainbow();\nvar drawRainbow = function(rainbow){\nellipse(rainbo.x, 10, 10, 10);};"
     });
@@ -106,7 +106,7 @@ describe("Scratchpad Output - BabyHint checks", function() {
     
     assertTest({
         title: "It should only trigger a single error for undefined var in for loop definition",
-        reason: "x is not defined. Make sure you're spelling it correctly and that you declared it.",
+        reason: `"x" is not defined. Make sure you're spelling it correctly and that you declared it.`,
         babyhint: true,
         code: "for (var i = 0; i < 10; x++) { }"
     });
@@ -135,80 +135,80 @@ describe("Scratchpad Output - JSHint syntax errors", function() {
         jshint: true,
         code: "rect(,70,60,240);"
     });
-
+    
     assertTest({
         title: "Missing value for third argument",
         reason: "I think you meant to type a value or variable name before that comma?",
         jshint: true,
         code: "rect(80, 70, 60, 240);\nrect(240, 70, 60, 240);\nrect(193, 139,,30);"
     });
-
+    
     assertTest({
         title: "Putting too much on left side of assignment",
         reason: "The left side of an assignment must be a single variable name, not an expression.",
         jshint: true,
         code: "var x;\nx+x=1"
     });
-
+    
     assertTest({
         title: "Typing a single number",
         reason: "I thought you were going to type an assignment or function call but you typed an expression instead.",
         jshint: true,
         code: "10"
     });
-
+    
     assertTest({
         title: "Not closing a string",
         reason: "Unclosed string! Make sure you end your string with a quote.",
         jshint: true,
         code: "var myName=\"Stuff"
     });
-
+    
     assertTest({
         title: "Not closing a string when there are errors in the string if it's considered as code",
         reason: "Unclosed string! Make sure you end your string with a quote.",
         jshint: true,
         code: "var greeting = \"Hello, my name is"
     });
-
+    
     assertTest({
         title: "Not closing a comment",
         reason: "It looks like your comment isn't closed. Use \"*/\" to end a multi-line comment.",
         jshint: true,
         code: "/*"
     });
-
+    
     assertTest({
         title: "Not starting a comment",
         reason: "It looks like you never started your comment. Use \"/*\" to start a multi-line comment.",
         jshint: true,
         code: "*/"
     });
-
+    
     assertTest({
         title: "Not matching a curly bracket",
         reason: "Unmatched \"{\".",
         jshint: true,
         code: "var bla = function() { if (true) { }"
     });
-
+    
     /* Syntax warnings - not controlled by JSHint options. */
-
+    
     assertTest({
         title: "Not putting a 0 in front of a decimal",
         reason: "Please put a 0 in front of the decimal point: \".2\"!",
         jshint: true,
         code: "var x=.2;"
     });
-
+    
     /* Fixed in JSHint updates */
-
+    
     assertTest({
         title: "Shouldn't complain about break in blocks in switch",
         jshint: true,
         code: "switch ('a') { case 'a': { println('boo'); break; } case 'b': break; }"
     });
-
+    
     assertTest({
         title: "Shouldn't complain about wrapped returned assignments",
         jshint: true,
@@ -335,14 +335,14 @@ describe("Scratchpad Output - JSHint syntax options", function() {
 
     assertTest({
         title: "Using undefined variable where a BabyHint spelling suggestion exists should merge the two error messages.",
-        reason: "examle is not defined. Maybe you meant to type example, or you're using a variable you didn't define.",
+        reason: `"examle" is not defined. Maybe you meant to type "example", or you're using a variable you didn't define.`,
         babyhint: true,
         code: "var example = 100;\nexamle = 30;"
     });
 
     assertTest({
         title: "Using undefined variable where a BabyHint spelling suggestion exists for another variable shouldn't merge anything.",
-        reason: "x is not defined. Make sure you're spelling it correctly and that you declared it.",
+        reason: `"x" is not defined. Make sure you're spelling it correctly and that you declared it.`,
         babyhint: true,
         code: "x=0;\nvar example = 100;\nexamle = 30;"
     });
