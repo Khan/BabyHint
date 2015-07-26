@@ -1,0 +1,3 @@
+[submodule "external/jshint"]
+	path = external/jshint
+	url = https://github.com/Khan/jshint

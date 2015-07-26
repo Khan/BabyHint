@@ -1,28 +1,58 @@
 var BabyHint = require("../src/babyhint.js");
-var JSHINT = require("jshint").JSHINT;
+var JSHINT = require("../external/jshint/src/jshint.js").JSHINT;
 let expect = require("expect.js");
 
 var context = {
-    rect() {},
+    rect(a,b,c,d) {},
     noStroke() {},
-    random() {}
+    random() {},
+    ellipse(a,b,c,d) {},
+    key() {},
+    println(a) {}
 };
 
 BabyHint.init({ context });
 
 function assertTest(options) {
     it(options.title, function () {
-        let code = "/*global random, rect */\n" + options.code;
+        let code = "/*global random:false, rect:false, ellipse:false, key:false, println:false */\n" + options.code;
+        JSHINT(code, { undef:true, noarg:true, latedef:true, eqeqeq:true, curly:true, shadow:true, smarttabs:true });
+        let jshintErrors = JSHINT.errors;
+        let errors = BabyHint.babyErrors(code, jshintErrors);
+
+        if (!options.reason) {
+            console.log(errors);
+            expect(errors.length).to.be.equal(0);
+        } else {
+            expect(errors).to.not.equal([]);
+            if (options.count) {
+                expect(errors.length).to.equal(options.count);
+            }
+            if (options.jshint) {
+                expect(errors[0].lint).to.be.ok();
+                expect(errors[0].lint.reason).to.be.equal(options.reason);
+            } else {
+                expect(errors[0].text).to.be.equal(options.reason);
+            }
+        }
+    }); 
+}
+
+function allErrorsTest(options) {
+    it(options.title, function () {
+        let code = "/*global random, rect, ellipse */\n" + options.code;
         JSHINT(code, { undef: true, curly: true, latedef: true });
         let jshintErrors = JSHINT.errors;
         let errors = BabyHint.babyErrors(code, jshintErrors);
-        
-        if (options.reason) {
-            expect(errors[0].text).to.equal(options.reason);
+
+        if (options.reasons) {
+            for (let i = 0; i < options.reasons.length; i++) {
+                expect(errors[i].text).to.equal(options.reasons[i]);
+            }
         } else {
             expect(errors.length).to.equal(0);
         }
-    }); 
+    });
 }
 
 describe("Scratchpad Output - BabyHint checks", function() {
@@ -227,12 +257,12 @@ describe("Scratchpad Output - JSHint syntax options", function() {
     });
 
     assertTest({
-        title: "Redefining ProcessingJS function",
+        title: "Redefining ProcessingJS function2",
         reason: "Redefinition of 'key'.",
         jshint: true,
         code: "var key = function() { rect(175, 220, 100, 150);};"
     });
-
+    
     /* See exports.undef in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Using undefined variable",
@@ -240,7 +270,7 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "ellipse(x, 100, 100, 100);"
     });
-
+    
     /* See exports.asi in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Missing a semicolon",
@@ -248,7 +278,7 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "var x = 2"
     });
-
+    
     /* See exports.curly in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Not using brackets around while body",
@@ -256,14 +286,14 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "while (true) doSomething();"
     });
-
+    
     assertTest({
         title: "Not using brackets around if body",
         reason: "I thought you were going to type \"{\" but you typed \"return\".",
         jshint: true,
         code: "if (1) return true;"
     });
-
+    
     /* See exports.supernew in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Using new before a function declaration",
@@ -271,14 +301,14 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "var a = new function () {};"
     });
-
+    
     assertTest({
         title: "Leaving off the parantheses in constructors",
         reason: "I think you're missing the \"()\" to invoke the constructor.",
         jshint: true,
         code: "var b = new Array;"
     });
-
+    
     /* See exports.expr in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Typing an expression statement without assignment",
@@ -286,7 +316,7 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "true;"
     });
-
+    
     /* See exports.loopfunc in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Using functions in a loop",
@@ -294,7 +324,7 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "while (true) {var x = function () {};};"
     });
-
+    
     /* See exports.boss in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Using = assignments instead of conditionals",
@@ -302,21 +332,21 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "var e;if (e = 1) {}"
     });
-
+    
     assertTest({
         title: "Using other assignments instead of conditionals",
         reason: "I thought you were going to type a conditional expression but you typed an assignment instead.",
         jshint: true,
         code: "var e;if (e /= 1) {}"
     });
-
+    
     assertTest({
         title: "Using assignments instead of conditionals in return statements",
         reason: "Did you mean to return a conditional instead of an assignment?",
         jshint: true,
         code: "var foo = function(a) { return a = 1;};"
     });
-
+    
     /* See exports.sub in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Using bracket notation with objects",
@@ -324,7 +354,7 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "window.obj = obj['prop'];"
     });
-
+    
     /* See exports.unnecessarysemicolon in https://github.com/jshint/jshint/blob/master/tests/unit/options.js */
     assertTest({
         title: "Using an unnecessary semicolon",
@@ -332,14 +362,14 @@ describe("Scratchpad Output - JSHint syntax options", function() {
         jshint: true,
         code: "var foo = function() {var a;;};"
     });
-
+    
     assertTest({
         title: "Using undefined variable where a BabyHint spelling suggestion exists should merge the two error messages.",
         reason: `"examle" is not defined. Maybe you meant to type "example", or you're using a variable you didn't define.`,
         babyhint: true,
         code: "var example = 100;\nexamle = 30;"
     });
-
+    
     assertTest({
         title: "Using undefined variable where a BabyHint spelling suggestion exists for another variable shouldn't merge anything.",
         reason: `"x" is not defined. Make sure you're spelling it correctly and that you declared it.`,
@@ -348,29 +378,29 @@ describe("Scratchpad Output - JSHint syntax options", function() {
     });
 });
 
-//// Error report patterns
-//describe("Scratchpad Output - Error report pattern checks", function() {
-//    // De-duplication of same-line same-text errors
-//    allErrorsTest({
-//        title: "Report repeated error only once per line",
-//        reasons: ["\"i\" is not defined. Make sure you're spelling it correctly and that you declared it."],
-//        jshint: true,
-//        code: "for (i = 0; i < 10; i++) {}"
-//    });
-//
-//    allErrorsTest({
-//        title: "Different errors on same line are still reported sepearately",
-//        reasons: ["\"i\" is not defined. Make sure you're spelling it correctly and that you declared it.",
-//            "\"j\" is not defined. Make sure you're spelling it correctly and that you declared it."],
-//        jshint: true,
-//        code: "for (i = 0, j = 0; i * j < 100; i++, j++) {}"
-//    });
-//
-//    allErrorsTest({
-//        title: "Same error on different lines are still reported separately",
-//        reasons: ["\"i\" is not defined. Make sure you're spelling it correctly and that you declared it.",
-//            "\"i\" is not defined. Make sure you're spelling it correctly and that you declared it."],
-//        jshint: true,
-//        code: "for (i = 0; i < 10; i++) {} \n i = 4;"
-//    });
-//});
+// Error report patterns
+describe("Scratchpad Output - Error report pattern checks", function() {
+    // De-duplication of same-line same-text errors
+    allErrorsTest({
+        title: "Report repeated error only once per line",
+        reasons: ["\"i\" is not defined. Make sure you're spelling it correctly and that you declared it."],
+        jshint: true,
+        code: "for (i = 0; i < 10; i++) {}"
+    });
+
+    allErrorsTest({
+        title: "Different errors on same line are still reported sepearately",
+        reasons: ["\"i\" is not defined. Make sure you're spelling it correctly and that you declared it.",
+            "\"j\" is not defined. Make sure you're spelling it correctly and that you declared it."],
+        jshint: true,
+        code: "for (i = 0, j = 0; i * j < 100; i++, j++) {}"
+    });
+
+    allErrorsTest({
+        title: "Same error on different lines are still reported separately",
+        reasons: ["\"i\" is not defined. Make sure you're spelling it correctly and that you declared it.",
+            "\"i\" is not defined. Make sure you're spelling it correctly and that you declared it."],
+        jshint: true,
+        code: "for (i = 0; i < 10; i++) {} \n i = 4;"
+    });
+});
