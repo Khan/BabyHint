@@ -1,6 +1,6 @@
 let _ = require("lodash");
 let $ = require("jquery");
-require("./i18n.js");
+require("./i18n.js");   // adds ._() and .ngettext() to jQuery's $
 
 /*
  * BabyHint does a line-by-line check for common beginner programming mistakes,
