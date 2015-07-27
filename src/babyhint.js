@@ -1,7 +1,6 @@
 let _ = require("lodash");
 let $ = require("jquery");
-let codes = require("./codes");
-require("./i18n.js");
+require("./i18n.js");   // adds ._() and .ngettext() to jQuery's $
 
 /*
  * BabyHint does a line-by-line check for common beginner programming mistakes,
@@ -195,19 +194,6 @@ var BabyHint = {
             // Get correct index number from the reported line number
             if (error) {
                 errorLines[error.line - 1] = true;
-                error.reason = codes[error.code];
-                if (error.a) {
-                    error.reason = error.reason.replace("{a}", error.a);
-                }
-                if (error.b) {
-                    error.reason = error.reason.replace("{b}", error.b);
-                }
-                if (error.c) {
-                    error.reason = error.reason.replace("{c}", error.c);
-                }
-                if (error.d) {
-                    error.reason = error.reason.replace("{d}", error.d);
-                }
             }
         });
 
@@ -219,7 +205,7 @@ var BabyHint = {
 
         return this.mergeErrors(hintErrors, BabyHint.errors);
     },
-    
+
     mergeErrors: function(jshintErrors, babyErrors) {
         var brokenLines = [];
         var prioritizedChars = {};
@@ -281,9 +267,12 @@ var BabyHint = {
                     // BabyLint has spelling suggestion.
                     if (jsError.lint.code === "W117" &&
                         babyError.source === "spellcheck") {
-                        babyError.text = $._("\"%(word)s\" is not defined. Maybe you meant to type \"%(keyword)s\", " +
-                            "or you're using a variable you didn't define.",
-                            {word: jsError.lint.a, keyword: babyError.context.keyword});
+                        babyError.text = $._(
+                            `"%(word)s" is not defined. Maybe you meant to ` +
+                            `type "%(keyword)s", or you're using a variable ` +
+                            `you didn't define.`,
+                            { word: jsError.lint.a, keyword: babyError.context.keyword }
+                        );
                     }
                 }
             });
@@ -293,7 +282,7 @@ var BabyHint = {
         let errors = babyErrors;
         let babyErrorRows = _.uniq(babyErrors.map(error => error.row));
         hintErrors.forEach(error => {
-            // Only add JSHint errors if there isn't already a BabyHint error 
+            // Only add JSHint errors if there isn't already a BabyHint error
             // on that line (row).
             if (!_.contains(babyErrorRows, error.row)) {
                 errors.push(error);
@@ -439,11 +428,16 @@ var BabyHint = {
         var functions = line.match(/function\s+\w+/g);
         _.each(functions, function(fun) {
             var name = fun.split(/\s+/g)[1];
-            // I18N: Don't translate the '\" var %(name)s = function() {}; \"' part
+            // I18N: Don't translate the '" var %(name)s = function() {}; "' part
+            let text = $._(
+                `If you want to define a function, you should use ` +
+                `"var %(name)s = function() {}; " instead!`,
+                { name: name }
+            );
             var error = {
                 row: lineNumber,
                 column: line.indexOf(fun),
-                text: $._("If you want to define a function, you should use \"var %(name)s = function() {}; \" instead!", {name: name}),
+                text: text,
                 breaksCode: true,
                 source: "funcdeclaration",
                 context: {name: name}
@@ -481,19 +475,25 @@ var BabyHint = {
         // the second instance of the same word will be accurate.
         var checkedChar = -1;
         _.each(words, function(word) {
-            if (word.length > 0 && !skipNext) { 
+            if (word.length > 0 && !skipNext) {
                 var editDist = BabyHint.editDistance(word);
                 var dist = editDist.editDistance;
                 var keyword = editDist.keyword;
                 if (dist > 0 &&
                     dist <= BabyHint.EDIT_DISTANCE_THRESHOLD &&
-                    dist < keyword.length - 1 && 
+                    dist < keyword.length - 1 &&
                     BabyHint.keywords.indexOf(word) === -1) {
                     checkedChar = line.indexOf(word, checkedChar + 1);
+
+                    let text = $._(
+                        `Did you mean to type "%(keyword)s" instead of "%(word)s"?`,
+                        { keyword: keyword, word: word }
+                    );
+
                     var error = {
                         row: lineNumber,
                         column: checkedChar,
-                        text: $._("Did you mean to type \"%(keyword)s\" instead of \"%(word)s\"?", {keyword: keyword, word: word}),
+                        text: text,
                         breaksCode: false,
                         source: "spellcheck",
                         context: {keyword: keyword, word: word}
@@ -501,7 +501,9 @@ var BabyHint = {
 
                     // if we have usage forms, display them as well.
                     if (BabyHint.functionFormSuggestion[keyword]) {
-                        error.text += " " + $._("In case you forgot, you can use it like \"%(usage)s\"", {usage: BabyHint.functionFormSuggestion[keyword]});
+                        error.text += " " +
+                            $._(`In case you forgot, you can use it like "%(usage)s"`,
+                                {usage: BabyHint.functionFormSuggestion[keyword]});
                     }
 
                     errors.push(error);
@@ -551,7 +553,8 @@ var BabyHint = {
             }
 
             // skip words with lengths that are too different
-            if (Math.abs(keyword.length - word.length) > BabyHint.EDIT_DISTANCE_THRESHOLD) {
+            if (Math.abs(keyword.length - word.length) >
+                    BabyHint.EDIT_DISTANCE_THRESHOLD) {
                 return;
             }
             var rows = keyword.length;
@@ -604,10 +607,14 @@ var BabyHint = {
         var matches = line.match(regex);
         if (matches) {
             var variableName = matches[0].slice(3);
+            let text = $._(
+                `Did you forget a space between "var" and "%(variable)s"?`,
+                { variable: variableName }
+            );
             var error = {
                 row: lineNumber,
                 column: line.search(regex) + 3,
-                text: $._("Did you forget a space between \"var\" and \"%(variable)s\"?", {variable: variableName}),
+                text: text,
                 breaksCode: false
             };
             errors.push(error);
@@ -626,7 +633,7 @@ var BabyHint = {
             var error = {
                 row: lineNumber,
                 column: i,
-                text: $._("You can't end a line with \"=\""),
+                text: $._(`You can't end a line with "="`),
                 breaksCode: true
             };
             errors.push(error);
@@ -677,7 +684,7 @@ var BabyHint = {
                     let error = {
                         row: lineNumber,
                         column: i,
-                        text: $._("It looks like you have an extra \")\""),
+                        text: $._(`It looks like you have an extra ")"`),
                         breaksCode: false,
                         source: "paramschecker",
                         context: {}
@@ -693,10 +700,13 @@ var BabyHint = {
         }
         if (stack.length > 0) {
             // check if there's anything left in the stack
+            let text = $._(
+                `It looks like you are missing a ")" - does every "(" have ` +
+                `a corresponding closing ")"?`);
             let error = {
                 row: lineNumber,
                 column: stack.pop(),
-                text: $._("It looks like you are missing a \")\" - does every \"(\" have a corresponding closing \")\"?"),
+                text: text,
                 breaksCode: false,
                 source: "paramschecker",
                 context: {}
@@ -708,7 +718,7 @@ var BabyHint = {
         }
 
         // Find all function calls.
-        // This will also include "if", "for", and "while".  These will be 
+        // This will also include "if", "for", and "while".  These will be
         // filtered out later so that we don't generate errors for param checks
         // on things that aren't function calls.
         var functions = line.match(/\w+\s*\(/g) || [];
@@ -772,12 +782,17 @@ var BabyHint = {
                 var functionCall;
 
                 if (typeof expectedParams !== "undefined") {
-                    functionCall = "\"" + functionName + "()\"";
+                    functionCall = `"${functionName}()"`;
 
                     if (typeof expectedParams === "number" &&
                         numParams !== expectedParams) {
 
-                        text = $.ngettext("%(name)s takes 1 parameter, not %(given)s!", "%(name)s takes %(num)s parameters, not %(given)s!", expectedParams, {name: functionCall, given: numParams});
+                        text = $.ngettext(
+                            `%(name)s takes 1 parameter, not %(given)s!", ` +
+                            `"%(name)s takes %(num)s parameters, not %(given)s!`,
+                            expectedParams,
+                            { name: functionCall, given: numParams }
+                        );
 
                     } else if (typeof expectedParams !== "number" &&
                                 !_.include(expectedParams, numParams)) {
@@ -791,14 +806,19 @@ var BabyHint = {
                         listOfParams += " " + $._("or") + " " +
                                         expectedParams[expectedParams.length - 1];
 
-                        text = $._("%(name)s takes %(list)s parameters, not %(given)s!", {name: functionCall, list: listOfParams, given: numParams});
+                        text = $._(
+                            `%(name)s takes %(list)s parameters, not %(given)s!`,
+                            { name: functionCall, list: listOfParams, given: numParams });
                     }
                 }
 
                 if (text) {
                     var functionForm = BabyHint.functionFormSuggestion[functionName];
                     if (functionForm) {
-                        text = $._("It looks like you're trying to use %(name)s. In case you forgot, you can use it like: %(usage)s", {name: functionCall, usage: "\"" + functionForm + "\""});
+                        text = $._(
+                            `It looks like you're trying to use %(name)s. ` +
+                            `In case you forgot, you can use it like: %(usage)s`,
+                            { name: functionCall, usage: `"${functionForm}"` });
                     }
                 }
 
