@@ -1,6 +1,5 @@
 let _ = require("lodash");
 let $ = require("jquery");
-let codes = require("./codes");
 require("./i18n.js");
 
 /*
@@ -195,19 +194,6 @@ var BabyHint = {
             // Get correct index number from the reported line number
             if (error) {
                 errorLines[error.line - 1] = true;
-                error.reason = codes[error.code];
-                if (error.a) {
-                    error.reason = error.reason.replace("{a}", error.a);
-                }
-                if (error.b) {
-                    error.reason = error.reason.replace("{b}", error.b);
-                }
-                if (error.c) {
-                    error.reason = error.reason.replace("{c}", error.c);
-                }
-                if (error.d) {
-                    error.reason = error.reason.replace("{d}", error.d);
-                }
             }
         });
 
