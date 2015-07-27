@@ -219,7 +219,7 @@ var BabyHint = {
 
         return this.mergeErrors(hintErrors, BabyHint.errors);
     },
-    
+
     mergeErrors: function(jshintErrors, babyErrors) {
         var brokenLines = [];
         var prioritizedChars = {};
@@ -293,7 +293,7 @@ var BabyHint = {
         let errors = babyErrors;
         let babyErrorRows = _.uniq(babyErrors.map(error => error.row));
         hintErrors.forEach(error => {
-            // Only add JSHint errors if there isn't already a BabyHint error 
+            // Only add JSHint errors if there isn't already a BabyHint error
             // on that line (row).
             if (!_.contains(babyErrorRows, error.row)) {
                 errors.push(error);
@@ -481,13 +481,13 @@ var BabyHint = {
         // the second instance of the same word will be accurate.
         var checkedChar = -1;
         _.each(words, function(word) {
-            if (word.length > 0 && !skipNext) { 
+            if (word.length > 0 && !skipNext) {
                 var editDist = BabyHint.editDistance(word);
                 var dist = editDist.editDistance;
                 var keyword = editDist.keyword;
                 if (dist > 0 &&
                     dist <= BabyHint.EDIT_DISTANCE_THRESHOLD &&
-                    dist < keyword.length - 1 && 
+                    dist < keyword.length - 1 &&
                     BabyHint.keywords.indexOf(word) === -1) {
                     checkedChar = line.indexOf(word, checkedChar + 1);
                     var error = {
@@ -708,7 +708,7 @@ var BabyHint = {
         }
 
         // Find all function calls.
-        // This will also include "if", "for", and "while".  These will be 
+        // This will also include "if", "for", and "while".  These will be
         // filtered out later so that we don't generate errors for param checks
         // on things that aren't function calls.
         var functions = line.match(/\w+\s*\(/g) || [];
